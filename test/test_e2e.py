@@ -6,21 +6,21 @@ Created on Jan 23, 2018
 """
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')  # make sure we handle unicode
-
 import os
 import unittest
 import shutil
 from StringIO import StringIO
 
-sys.path.append(os.path.abspath(".."))  # test module from the parent directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")))  # test module from the parent directory
 import duplicates.duplicates as duplicates
 # import time
 
-class PhotosHandlerE2EValidation(unittest.TestCase):
+class DuplicatesE2EValidation(unittest.TestCase):
 
 	def setUp(self):
+		self.curdir = os.path.abspath(os.curdir)
+		os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
 		# save stdout to a variable
 		self.stdout_orig = sys.stdout
 		self.stdout = StringIO()
@@ -44,6 +44,7 @@ class PhotosHandlerE2EValidation(unittest.TestCase):
 		shutil.rmtree("tgt", ignore_errors = True)
 		shutil.rmtree("tst copy", ignore_errors = True)
 
+		os.chdir(self.curdir)
 
 	def test_straight(self):
 		'''test that duplicates.py finds all the duplicates in the sample folder'''
@@ -263,12 +264,13 @@ class PhotosHandlerE2EValidation(unittest.TestCase):
 		all_files = duplicates.get_all_files("tst copy")
 		self.assertEqual(16, len(all_files), "total files")
 
-
-if __name__ == '__main__':
-	unittest.main()
-	"""
-	suite = unittest.TestSuite()
-	suite.addTest(PhotosHandlerE2EValidation("test_duplicates_similar_names2"))
+def main():
+	# unittest.main()
+	# suite = unittest.TestSuite()
+	# suite.addTest(PhotosHandlerE2EValidation("test_duplicates_similar_names2"))
+	suite = unittest.makeSuite(DuplicatesE2EValidation)
 	runner = unittest.TextTestRunner()
 	runner.run(suite)
-	# """
+
+if __name__ == '__main__':
+	main()

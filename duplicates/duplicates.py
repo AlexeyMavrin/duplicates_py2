@@ -6,6 +6,7 @@ Created on Feb 3, 2018
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
 
 import traceback
 import sys
@@ -16,10 +17,9 @@ import argparse
 import itertools
 import time
 import humanize
-import importlib
 
 # import not packeged dependency - duplicatefilefinder
-sys.path.append(os.path.abspath(os.path.join("non-pack-deps", "duplicate-file-finder")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "non-pack-deps", "duplicate-file-finder")))
 import duplicatefilefinder
 
 logging.basicConfig()
@@ -27,9 +27,6 @@ logger = logging.getLogger("duplicates")
 
 
 # CUSTOM EXCEPTIONS/ Classes
-class GreatSuccess(BaseException):  # app successfully complete
-	pass
-
 class ArgumentCheck(BaseException):
 	pass
 
@@ -99,7 +96,7 @@ def print_and_process_duplicates(files, golden, purge = False):
 
 		try: size_ = humanize.naturalsize(os.path.getsize(paths[0]), gnu = True)
 		except OSError as e: size_ = e
-		print "\n(%d) Found %d duplicate files (size: %s) in '%s/':" % (pos, len(paths), size_, prefix)
+		print("\n(%d) Found %d duplicate files (size: %s) in '%s/':" % (pos, len(paths), size_, prefix))
 
 		# fill the tags
 		tags = ["NA"] * len(paths)  # mark with NA
@@ -123,14 +120,14 @@ def print_and_process_duplicates(files, golden, purge = False):
 			try: mtime = time.ctime(os.path.getmtime(os.path.join(prefix, path)))
 			except OSError as e: mtime = e
 				
-			print "%2d: %2s '%s' [%s]" % (i, tag, path[len(prefix) + 1:].strip(), mtime),
+			print("%2d: %2s '%s' [%s]" % (i, tag, path[len(prefix) + 1:].strip(), mtime), end='')
 			if purge and tag == "*D":
 				try:
 					os.unlink(os.path.join(prefix, path))
 					stats.deleted_files += 1
-					print " - DELETED"
+					print(" - DELETED")
 				except OSError as e:
-					print "ERROR: ", e
+					print("ERROR: ", e)
 			else:
 				print
 
@@ -148,10 +145,10 @@ def duplicates(work, golden = None, purge = False):
 	# 1. optimization checks
 	if golden:
 		golden = os.path.abspath(golden)
-		print u"files unchanged (golden) in:", golden
+		print(u"files unchanged (golden) in:", golden)
 	else: golden = "\x00"  # if golden is not set, make it non path string
 	work = os.path.abspath(work)
-	print u"searching and removing duplicates in:", work
+	print(u"searching and removing duplicates in:", work)
 
 	if ((work + os.sep).startswith(golden + os.sep)):
 		raise ArgumentCheck("work path is under golden")
@@ -174,28 +171,44 @@ def duplicates(work, golden = None, purge = False):
 
 	# 6. remove empty dirs in work
 	if purge:
-		print "Deleting empty dir's in work ('%s')" % (work)
+		print("Deleting empty dir's in work ('%s')" % (work))
 		delete_empty_dirs(work)
 
-	print stats
 	return stats
 
 
 def main():
-	""" The main function, what else? """
-	# 0. get arguments
-	ARGS = parse_arguments()
+	""" The main function"""
+	
+	try:
+		#*** Execution time ***
+		started = datetime.datetime.now()
 
-	# 1. prepare
-	logger.setLevel(logging.DEBUG if ARGS.verbose else logging.INFO)
-
-	# 2. duplicates
-	# duplicates(ARGS, logger)
-	stats = duplicates(ARGS.work, ARGS.golden, ARGS.purge)
-
-	# 4. all good
-	# raise GreatSuccess
-	return stats
+		# 0. get arguments
+		ARGS = parse_arguments()
+	
+		# 1. prepare
+		logger.setLevel(logging.DEBUG if ARGS.verbose else logging.INFO)
+	
+		# 2. duplicates
+		# duplicates(ARGS, logger)
+		stats = duplicates(ARGS.work, ARGS.golden, ARGS.purge)
+		print(stats)
+	
+		# *** EXECUTION TIME ***
+		ended = datetime.datetime.now()
+		print('Complete in %i minutes (%i sec.).' % ((ended - started).seconds / 60, (ended - started).seconds))
+		return 0
+	
+	except KeyboardInterrupt:
+		logger.error("terminated by user")
+		sys.exit(1)
+	
+	except Exception as e:  # pylint: disable=W0703
+		if logger.level == logging.DEBUG:
+			traceback.print_exc(file = sys.stderr)  # BEBUG
+		logger.error(e)
+		sys.exit(2)
 
 
 def delete_empty_dirs(path):
@@ -211,32 +224,11 @@ def delete_empty_dirs(path):
 			delete_empty_dirs(os.path.join(root, dir_))
 			try: 
 				os.rmdir(os.path.join(root, dir_))  # deletes only empty dirs
-				print "   empty directory removed: ", os.path.join(root, dir_)
+				print("   empty directory removed: ", os.path.join(root, dir_))
 			except OSError: pass
 
 		# print root
 
+if __name__ == '__main__':
+	main()
 
-try:
-	#*** Execution time ***
-	started = datetime.datetime.now()
-
-	if __name__ == '__main__':
-		main()
-		raise GreatSuccess  # all good
-
-except GreatSuccess:
-	# *** EXECUTION TIME ***
-	ended = datetime.datetime.now()
-	logger.info('Complete in %i minutes (%i sec.).' , (ended - started).seconds / 60, (ended - started).seconds)
-	sys.exit(0)
-
-except KeyboardInterrupt:
-	logger.error("terminated by user")
-	exit(1)
-
-except Exception as e:  # pylint: disable=W0703
-	if logger.level == logging.DEBUG:
-		traceback.print_exc(file = sys.stderr)  # BEBUG
-	logger.error(e)
-	exit(2)
