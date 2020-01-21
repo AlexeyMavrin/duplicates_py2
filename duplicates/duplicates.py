@@ -224,7 +224,7 @@ def delete_empty_dirs(path):
 			delete_empty_dirs(os.path.join(root, dir_))
 			try: 
 				os.rmdir(os.path.join(root, dir_))  # deletes only empty dirs
-				print("   empty directory removed: ", os.path.join(root, dir_))
+				print("   empty directory removed: ", os.path.join(root, dir_).encode('utf-8'))
 			except OSError: pass
 
 		# print root

@@ -39,7 +39,7 @@ class InstallCommand(install, object):
 setuptools.setup(
 	cmdclass = {'install': InstallCommand, 'test': TestCommand},
 	name = 'duplicates',
-	version = '1.0',
+	version = '1.1',
 	description = 'Duplicates search and removal. The wrapper over duplicate-file-finder',
 	author = 'Alexey Mavrin',
 	author_email = 'alexeymavrin@gmail.com',
