@@ -38,7 +38,7 @@ class InstallCommand(install, object):
 
 setuptools.setup(
 	cmdclass = {'install': InstallCommand, 'test': TestCommand},
-	name = 'duplicates',
+	name = 'duplicates-py2',
 	version = '1.1',
 	description = 'Duplicates search and removal. The wrapper over duplicate-file-finder',
 	author = 'Alexey Mavrin',
@@ -53,7 +53,7 @@ setuptools.setup(
 	# dependency_links = ['https://github.com/michaelkrisper/duplicate-file-finder'],
 	entry_points = {
 		'console_scripts': [
-		  'duplicates = duplicates.duplicates:main',
+		  'duplicates_py2 = duplicates.duplicates:main',
 		]
 	  }
 )
